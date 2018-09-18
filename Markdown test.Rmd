@@ -9,8 +9,8 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-First we need to build the HLM models in R
-Then do the AIC testing
+First we need to build the HLM models in R (done)
+Then do the AIC testing (not possible. We'll do a simple variance explained argument)
 Then do assumption checking
 Then build descriptives for gain aggregated and disagregated and add the means to the descriptives table
 
@@ -21,14 +21,23 @@ output: html_document
 
 Load stuff (There are some packages that we don't need here, but I didn't clean them up. Sorry.)
 ```{r}
-load("~/Box Sync/work/Research/R stuff/hmiout40")
+load("~/Box Sync/work/Research/R stuff/hmiout40") #Ben's computer
+library("ggplot2")
+library("HLMdiag")
+library("DHARMa")
+library("car") #for the Levene test which we will not discuss here
+library("Matrix")
+library(mitools)
+library(stargazer)
 library(lme4)
 library(nlme)
 library(mice)
 library(mitml)
 library(multcomp)
 library(foreach)
-library(dplyr)
+library(ggplot2)
+library(stringr)
+library(dplyr)  #I load dplyr last because some of its functions (select) will be masked by plyr and it is a PITA to debug
 ```
 
 Creating mitml and extra variables
@@ -43,41 +52,63 @@ MIdata <- within(MIdata,{
 })
 ```
 
-Models
+Models (Note, we can't actually use these since they don't work with the with function)
 ```{r}
-modpost1<-pst_scor~1 + (1|crse_id)
-modg1<-gain~1 + (1|crse_id)
-
-modpost2<-(pst_scor~1 + stud_pre_cent+  race_urm + gen_urm + (1|crse_id))
-modg2<-(gain~1 + stud_pre_cent+  race_urm + gen_urm + (1|crse_id))
-
-modpost3<-(pst_scor~1 + stud_pre_cent*collabnla+ stud_pre_cent*used_las+ class_pre_cent + race_urm*used_las+ race_urm*collabnla + gen_urm*used_las + gen_urm*collabnla+ (1|crse_id))
-modg3<-(gain~1 + stud_pre_cent*collabnla+ stud_pre_cent*used_las+ class_pre_cent + race_urm*used_las+ race_urm*collabnla + gen_urm*used_las + gen_urm*collabnla+ (1|crse_id))
+mod1 <- (gain~1 + (1|crse_id))
+mod2 <- (gain~1 + used_las + collabnla + (1|crse_id))
+mod3 <- (gain~1 + stud_pre_cent+  used_las + collabnla + (1|crse_id))
+mod4 <- (gain~1 + stud_pre_cent+  used_las + collabnla + (1+ stud_pre_cent|crse_id))
+mod5 <- (gain~1 + stud_pre_cent+  used_las + collabnla + class_pre_cent + (1|crse_id))
+mod6 <- (gain~1 + stud_pre_cent+  used_las + collabnla + class_pre_cent + (1+ stud_pre_cent|crse_id))
 ```
 
-Run models
+Run HLM models
 ```{r}
-post1<-with(MIdata,{lmer(pst_scor~1 + (1|crse_id))})
-gain1<-with(MIdata,{lmer(gain~1 + (1|crse_id))})
-
-post2<-with(MIdata,{lmer(pst_scor~1 + stud_pre_cent+  race_urm + gen_urm + (1|crse_id))})
-gain2<-with(MIdata,{lmer(gain~1 +stud_pre_cent+  race_urm + gen_urm+ (1|crse_id))})
-
-post3<-with(MIdata,{lmer(pst_scor~1 + stud_pre_cent*collabnla+ stud_pre_cent*used_las+ class_pre_cent + race_urm*used_las+ race_urm*collabnla + gen_urm*used_las + gen_urm*collabnla + (1|crse_id))})
-gain3<-with(MIdata,{lmer(gain~1 +stud_pre_cent*collabnla+ stud_pre_cent*used_las+ class_pre_cent + race_urm*used_las+ race_urm*collabnla + gen_urm*used_las + gen_urm*collabnla+ (1|crse_id))})
+HLM1<-with(MIdata,{lmer(gain~1 + (1|crse_id))})
+HLM2<-with(MIdata,{lmer(gain~1 + used_las + collabnla + (1|crse_id))})
+HLM3<-with(MIdata,{lmer(gain~1 + stud_pre_cent+  used_las + collabnla + (1|crse_id))})
+HLM4<-with(MIdata,{lmer(gain~1 + stud_pre_cent+  used_las + collabnla + (1+ stud_pre_cent|crse_id))})
+HLM5<-with(MIdata,{lmer(gain~1 + stud_pre_cent+  used_las + collabnla + class_pre_cent + (1|crse_id))})
+HLM6<-with(MIdata,{lmer(gain~1 + stud_pre_cent+  used_las + collabnla + class_pre_cent + (1+ stud_pre_cent|crse_id))})
 ```
 
-Model outputs
+Run MLR models
 ```{r}
-testEstimates(post1, var.comp=TRUE)
-testEstimates(gain1, var.comp=TRUE)
-
-testEstimates(post2, var.comp=TRUE)
-testEstimates(gain2, var.comp=TRUE)
-
-testEstimates(post3, var.comp=TRUE)
-testEstimates(gain3, var.comp=TRUE)
+MLR1<-with(MIdata,{lm(gain~1)})
+MLR2<-with(MIdata,{lm(gain~1 + used_las + collabnla)})
+MLR3<-with(MIdata,{lm(gain~1 + stud_pre_cent+  used_las + collabnla)})
+MLR4<-with(MIdata,{lm(gain~1 + stud_pre_cent+  used_las + collabnla)})
+MLR5<-with(MIdata,{lm(gain~1 + stud_pre_cent+  used_las + collabnla + class_pre_cent)})
+MLR6<-with(MIdata,{lm(gain~1 + stud_pre_cent+  used_las + collabnla + class_pre_cent)})
 ```
+
+HLM Model outputs
+```{r}
+testEstimates(HLM1, var.comp=TRUE)
+testEstimates(HLM2, var.comp=TRUE)
+testEstimates(HLM3, var.comp=TRUE)
+testEstimates(HLM4, var.comp=TRUE)
+testEstimates(HLM5, var.comp=TRUE)
+testEstimates(HLM6, var.comp=TRUE)
+```
+
+MLR Model outputs
+```{r}
+testEstimates(MLR1, var.comp=TRUE)
+testEstimates(MLR2, var.comp=TRUE)
+testEstimates(MLR3, var.comp=TRUE)
+testEstimates(MLR4, var.comp=TRUE)
+testEstimates(MLR5, var.comp=TRUE)
+testEstimates(MLR6, var.comp=TRUE)
+```
+
+Assumption checking as recommended here: https://ademos.people.uic.edu/Chapter18.html
+```{r}
+sum1<-within(MIdata,{summary(gain1)})
+sum1
+```
+
+
 
 Creating groups for final model
 ```{r}
