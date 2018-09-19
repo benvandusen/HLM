@@ -105,10 +105,18 @@ testEstimates(MLR6, var.comp=TRUE)
 Assumption checking as recommended here: https://ademos.people.uic.edu/Chapter18.html
 Note: I think we may just need to do this for each of the 10 datasets independently.
 
+Run 10 HLM 3 models
+```{r}
+D1 <- lmer(mod3,data=MIdata[[1]])
+```
+
+
 Extract datasets
 ```{r}
-implist <- mitmlComplete(HLM3, print="all")
+mitmlComplete(MIdata, print=1)
 mitmlComplete(MIdata, print=1, force.list=TRUE)
+
+
 ```
 
 
@@ -117,7 +125,7 @@ Linearity... check residuals following this guys solution? https://stackoverflow
  
 
 Plot.Model.F.Linearity<-with(MIdata,{plot(resid(HLM3),gain)})
-Plot.Model.F.Linearity2<-plot(resid(HLM3),gain)
+Plot.Model.F.Linearity2<-plot(resid(D1),MIdata[[1]]$gain)
 with(MIdata,{resid(HLM3)})
 ```
 
