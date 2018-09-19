@@ -119,30 +119,42 @@ D1 <- lmer(mod3,data=MIdata[[1]])
 ```
 
 
-Extract datasets
-```{r}
-mitmlComplete(MIdata, print=1)
-mitmlComplete(MIdata, print=1, force.list=TRUE)
 
+Linearity... check residuals following this guys solution?
+https://lib.dr.iastate.edu/cgi/viewcontent.cgi?article=4284&context=etd
+https://stackoverflow.com/questions/33859440/residual-plots-for-multiple-imputation-using-mice-package-in-r
+https://biologyforfun.wordpress.com/2014/04/16/checking-glm-model-assumptions-in-r/
+
+Linearity (we fail?)
+```{r}
+Plot.Model.F.Linearity<-plot(resid(D1),MIdata[[1]]$gain) #resid() calls for the residuals of the model, Cigarettes was our initial outcome variables - we're plotting the residuals vs observered
+
+plot.gain.pre<- plot(MIdata[[1]]$gain,MIdata[[1]]$pre)
 
 ```
 
-
-Linearity... check residuals following this guys solution? https://stackoverflow.com/questions/33859440/residual-plots-for-multiple-imputation-using-mice-package-in-r
+homogenety of variance (we pass)
 ```{r}
- 
-
-Plot.Model.F.Linearity<-with(MIdata,{plot(resid(HLM3),gain)})
-Plot.Model.F.Linearity2<-plot(resid(D1),MIdata[[1]]$gain)
-with(MIdata,{resid(HLM3)})
+plot(D1, main = "Standardized Residuals Plot", xlab = "Standardized Predicted Values", ylab = "Standardized Residuals")
 ```
+
+Assumption of Normality or residuals (we pass)
+```{r}
+qqmath(D1) #id: identifies values that may be exerting undue influence on the model (i.e. outliers) 
+```
+
+
 
 Try using Dharma: https://cran.r-project.org/web/packages/DHARMa/vignettes/DHARMa.html
 ```{r}
-simulationOutput <- with(MIdata,{simulateResiduals(fittedModel = HLM3, n = 250)})
+simulationOutput <- with(MIdata[[1]],{simulateResiduals(fittedModel = D1, n = 250)})
+plot(simulationOutput)
+testUniformity(simulationOutput = simulationOutput)
 
 ```
 
+
+http://r-statistics.co/Assumptions-of-Linear-Regression.html
 
 Creating groups for final model
 ```{r}
