@@ -42,14 +42,21 @@ library(dplyr)  #I load dplyr last because some of its functions (select) will b
 
 Creating mitml and extra variables
 ```{r}
-MIdata<-mids2mitml.list(hmi.out40)
-MIdata <- within(MIdata,{
-  G.pre <- clusterMeans(pre_scor,crse_id) # calculate group means
-  stud_pre_cent <- pre_scor - G.pre          # center around group means
-  class_pre_cent <- G.pre - mean(pre_scor)
-  collabnla <- ifelse(colablrn==1,ifelse(used_las==0,1,0),0)
-  gain <- pst_scor - pre_scor
-})
+MIdata<-mids2mitml.list(hmi.fall.2018) #converts file type
+
+thing <- list()
+for (i in 1:10){
+  temp <- MIdata[[i]]
+  class_means <- temp %>% group_by(course_id) %>% summarise(pre_mean_class = mean(pre_score))
+  class_means$class_pre_cent <- mean(class_means$pre_mean_class) - class_means$pre_mean_class
+  temp <- left_join(temp,class_means, by="course_id")
+  temp$stud_pre_cent <- temp$pre_mean_class - temp$pre_score
+  temp$gain <- temp$post_score - temp$pre_score
+  temp$coll <- temp$colab_no_la + temp$used_las
+  #assign(df.names[i], temp)
+  thing[[i]] <- temp
+  }
+MIdata <- as.mitml.list(thing)
 ```
 
 Models (Note, we can't actually use these since they don't work with the with function)
