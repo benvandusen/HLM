@@ -20,7 +20,7 @@ output: html_document
 ---
 
 Load stuff (There are some packages that we don't need here, but I didn't clean them up. Sorry.)
-```{r}
+```{r message=FALSE, warning=FALSE}
 load("~/Box Sync/work/Research/R stuff/hmiout40") #Ben's computer
 library("ggplot2")
 library("HLMdiag")
@@ -63,7 +63,7 @@ mod6 <- (gain~1 + stud_pre_cent+  used_las + collabnla + class_pre_cent + (1+ st
 ```
 
 Run HLM models
-```{r}
+```{r message=FALSE, warning=FALSE}
 HLM1<-with(MIdata,{lmer(gain~1 + (1|crse_id))})
 HLM2<-with(MIdata,{lmer(gain~1 + used_las + collabnla + (1|crse_id))})
 HLM3<-with(MIdata,{lmer(gain~1 + stud_pre_cent+  used_las + collabnla + (1|crse_id))})
@@ -103,11 +103,22 @@ testEstimates(MLR6, var.comp=TRUE)
 ```
 
 Assumption checking as recommended here: https://ademos.people.uic.edu/Chapter18.html
+Note: I think we may just need to do this for each of the 10 datasets independently.
+
+Linearity... check residuals following this guys solution? https://stackoverflow.com/questions/33859440/residual-plots-for-multiple-imputation-using-mice-package-in-r
 ```{r}
-sum1<-within(MIdata,{summary(gain1)})
-sum1
+ 
+
+Plot.Model.F.Linearity<-with(MIdata,{plot(resid(HLM3),gain)})
+Plot.Model.F.Linearity2<-plot(resid(HLM3),gain)
+with(MIdata,{resid(HLM3)})
 ```
 
+Try using Dharma: https://cran.r-project.org/web/packages/DHARMa/vignettes/DHARMa.html
+```{r}
+simulationOutput <- with(MIdata,{simulateResiduals(fittedModel = HLM3, n = 250)})
+
+```
 
 
 Creating groups for final model
@@ -129,118 +140,5 @@ contrast.formulas <-rbind('White Male'=WM, 'White Male Collab'=WMC, 'White Male 
                           'Black Male'=BM, 'Black Male Collab'=BMC, 'Black Male LA'=BMLA,
                           'White Female'=WF,'White Female Collab'=WFC, 'White Female LA'=WFLA,
                           'Black Female'=BF,'Black Female Collab'=BFC, 'Black Female LA'=BFLA)
-```
-
-Confidence interval for MI attempt (This is where I'm stuck)
-```{r}
-get.est <- foreach(i=1:10, .combine=rbind) %do% {
-  sxp3 <- summary(glht(post3[[i]], linfct=contrast.formulas)) #specifically for post3
-  covp3 <- vcov(glht(post3[[i]], linfct=contrast.formulas))
-  data.frame(imp=i, 
-             group=rownames(sx$linfct),
-             d = sxp3$test$coefficients, 
-             var.d = sxp3$test$sigma,
-             cov = covp3)
-}
-
-
-p3est <- get.est %>% group_by(group) %>% 
-                  summarise(Q = mean(d), 
-                            U = mean(var.d), 
-                            B = var(d), 
-                            T = U + (1+1/max(imp)*B), 
-                            LCL = Q - 1.96*sqrt(T), 
-                            UCL = Q + 1.96*sqrt(T),
-                            SE = sqrt(T)) 
-
-p3est
-
-get.est <- foreach(i=1:10, .combine=rbind) %do% {
-  sxp3 <- summary(glht(gain3[[i]], linfct=contrast.formulas)) #specifically for post3
-  covp3 <- vcov(glht(gain3[[i]], linfct=contrast.formulas))
-  data.frame(imp=i, 
-             group=rownames(sx$linfct),
-             d = sxp3$test$coefficients, 
-             var.d = sxp3$test$sigma,
-             cov = covp3)
-}
-
-
-g3est <- get.est %>% group_by(group) %>% 
-                  summarise(Q = mean(d), 
-                            U = mean(var.d), 
-                            B = var(d), 
-                            T = U + (1+1/max(imp)*B), 
-                            LCL = Q - 1.96*sqrt(T), 
-                            UCL = Q + 1.96*sqrt(T),
-                            SE = sqrt(T),
-                            cvwm = mean(cov.White.Male)) 
-
-g3est
-```
-
-Ratios against majority
-```{r}
-ratmBF = g3est$Q[1]/g3est$Q[10]
-ratmBFC = g3est$Q[2]/g3est$Q[11]
-ratmBFL = g3est$Q[3]/g3est$Q[12]
-ratmBM = g3est$Q[4]/g3est$Q[10]
-ratmBMC = g3est$Q[5]/g3est$Q[11]
-ratmBML = g3est$Q[6]/g3est$Q[12]
-ratmWF = g3est$Q[7]/g3est$Q[10]
-ratmWFC = g3est$Q[8]/g3est$Q[11]
-ratmWFL = g3est$Q[9]/g3est$Q[12]
-
-
-s.e.ratmBF = sqrt((ratmBF)^2*((g3est$T[1])/(g3est$Q[1]^2)+(g3est$T[10])/(g3est$Q[10]^2)-2*(g3est$cvwm[1]/((g3est$Q[1])*(g3est$Q[10])))))
-s.e.ratmBFC = sqrt((ratmBFC)^2*((g3est$T[2])/(g3est$Q[2]^2)+(g3est$T[11])/(g3est$Q[11]^2)-2*(g3est$cvwm[2]/((g3est$Q[2])*(g3est$Q[11])))))
-s.e.ratmBFL = sqrt((ratmBFL)^2*((g3est$T[3])/(g3est$Q[3]^2)+(g3est$T[12])/(g3est$Q[12]^2)-2*(g3est$cvwm[3]/((g3est$Q[3])*(g3est$Q[12])))))
-s.e.ratmBM = sqrt((ratmBM)^2*((g3est$T[4])/(g3est$Q[4]^2)+(g3est$T[10])/(g3est$Q[10]^2)-2*(g3est$cvwm[4]/((g3est$Q[4])*(g3est$Q[10])))))
-s.e.ratmBMC = sqrt((ratmBMC)^2*((g3est$T[5])/(g3est$Q[5]^2)+(g3est$T[11])/(g3est$Q[11]^2)-2*(g3est$cvwm[5]/((g3est$Q[5])*(g3est$Q[11])))))
-s.e.ratmBML = sqrt((ratmBML)^2*((g3est$T[6])/(g3est$Q[6]^2)+(g3est$T[12])/(g3est$Q[12]^2)-2*(g3est$cvwm[6]/((g3est$Q[6])*(g3est$Q[12])))))
-s.e.ratmWF = sqrt((ratmWF)^2*((g3est$T[7])/(g3est$Q[7]^2)+(g3est$T[10])/(g3est$Q[10]^2)-2*(g3est$cvwm[7]/((g3est$Q[7])*(g3est$Q[10])))))
-s.e.ratmWFC = sqrt((ratmWFC)^2*((g3est$T[8])/(g3est$Q[8]^2)+(g3est$T[11])/(g3est$Q[11]^2)-2*(g3est$cvwm[8]/((g3est$Q[8])*(g3est$Q[11])))))
-s.e.ratmWFL = sqrt((ratmWFL)^2*((g3est$T[9])/(g3est$Q[9]^2)+(g3est$T[12])/(g3est$Q[12]^2)-2*(g3est$cvwm[9]/((g3est$Q[9])*(g3est$Q[12])))))
-
-s.e.ratmBF
-s.e.ratmBFC
-s.e.ratmBFL
-s.e.ratmBM
-s.e.ratmBMC
-s.e.ratmBML
-s.e.ratmWF
-s.e.ratmWFC
-s.e.ratmWFL
-ratmBF
-ratmBFC
-ratmBFL 
-ratmBM
-ratmBMC
-ratmBML
-ratmWF
-ratmWFC
-ratmWFL
-```
-Ratios against self
-```{r}
-ratsBFC = g3est$Q[2]/g3est$Q[1]
-ratsBFL = g3est$Q[3]/g3est$Q[1]
-ratsBMC = g3est$Q[5]/g3est$Q[4]
-ratsBML = g3est$Q[6]/g3est$Q[4]
-ratsWFC = g3est$Q[8]/g3est$Q[7]
-ratsWFL = g3est$Q[9]/g3est$Q[7]
-ratsWMC = g3est$Q[11]/g3est$Q[10]
-ratsWML = g3est$Q[12]/g3est$Q[10]
-
-s.e.ratsBF = sqrt((ratsBF)^2*((g3est$T[2])/(g3est$Q[2]^2)+(g3est$T[1])/(g3est$Q[1]^2)-2*(g3est$cvwm[1]/((g3est$Q[1])*(g3est$Q[10]))))) #This doesn't work becuse I have to update the cvwm factor. 
-
-ratsBFC
-ratsBFL 
-ratsBMC
-ratsBML
-ratsWFC
-ratsWFL
-ratsWMC
-ratsWML
 ```
 
