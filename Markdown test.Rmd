@@ -105,6 +105,13 @@ testEstimates(MLR6, var.comp=TRUE)
 Assumption checking as recommended here: https://ademos.people.uic.edu/Chapter18.html
 Note: I think we may just need to do this for each of the 10 datasets independently.
 
+Extract datasets
+```{r}
+implist <- mitmlComplete(HLM3, print="all")
+mitmlComplete(MIdata, print=1, force.list=TRUE)
+```
+
+
 Linearity... check residuals following this guys solution? https://stackoverflow.com/questions/33859440/residual-plots-for-multiple-imputation-using-mice-package-in-r
 ```{r}
  
