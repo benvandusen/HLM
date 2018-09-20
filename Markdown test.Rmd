@@ -158,6 +158,7 @@ cor.test(resid(D1), MIdata[[1]]$collabnla)
 https://ademos.people.uic.edu/Chapter18.html
 homogenety of variance we pass with variance, but not variance^2 (don't pass?) 
 Maybe not required for HLM: https://stats.stackexchange.com/questions/77891/checking-assumptions-lmer-lme-mixed-models-in-r
+https://stats.stackexchange.com/questions/255546/test-homogeneity-in-lmer-models
 
 ```{r}
 MIdata[[1]]$Model.F.Res<- residuals(D1) #extracts the residuals and places them in a new column in our original data table
@@ -188,6 +189,36 @@ simulationOutput <- with(MIdata[[1]],{simulateResiduals(fittedModel = D1, n = 25
 plot(simulationOutput)
 testUniformity(simulationOutput = simulationOutput)
 
+```
+
+
+HLMdiag version of diagnostics
+```{r}
+library(HLMdiag)
+
+resid1_D1 <- HLMresid(D1, level = 1, type = "LS", standardize = TRUE)
+head(resid1_D1)
+
+qplot(x= MIdata[[1]]$pre_scor, y = LS.resid, data = resid1_D1, geom = c("point", "smooth")) +ylab ("LS level-1 residuals") #L1 residuals vs. prescore
+
+qplot(x= MIdata[[1]]$gain, y = LS.resid, data = resid1_D1, geom = c("point", "smooth")) +ylab ("LS level-1 residuals") #L1 residuals vs. gain
+
+resid1_sem_D1 <- HLMresid(D1, level = 1, type = "LS", standardize = "semi") #use to test for homoscedasticity in L1
+head(resid1_sem_D1) 
+
+qplot(x= MIdata[[1]]$pre_scor, y = semi.std.resid, data = resid1_sem_D1) + geom_smooth(method = "lm") +ylab ("semi-standardized residuals") +xlab("Prescore") #L1 semi-standardized residuals vs. prescore. Looks good for homoscedasticity and linearity
+
+qplot(x= MIdata[[1]]$gain, y = semi.std.resid, data = resid1_sem_D1) + geom_smooth(method = "lm") +ylab ("semi-standardized residuals") +xlab("gain") #L1 semi-standardized residuals vs. gain. Looks good for homoscedasticity and linearity
+
+ssresid <- na.omit(resid1_sem_D1$semi.std.resid)
+ggplot_qqnorm(x = ssresid, line = "rlm") #L1 semi-standardized residual q-q plot. This checks for normality, and we look good.
+
+#Now level 2 stuff
+resid2_D1 <- HLMresid(object = D1, level = "crse_id") #This doesn't appear to be pulling the L2 residuals for some reason.
+head(resid2_D1)
+
+ssresid2 <- na.omit(resid2_D1$standLRT)
+ggplot_qqnorm(x = ssresid2, line = "rlm")
 ```
 
 
