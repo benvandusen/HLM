@@ -139,22 +139,22 @@ cor.test(resid(D1), MIdata[[1]]$collabnla)
 ```
 
 https://ademos.people.uic.edu/Chapter18.html
-homogenety of variance (don't pass?) 
+homogenety of variance we pass with variance, but not variance^2 (don't pass?) 
 Maybe not required for HLM: https://stats.stackexchange.com/questions/77891/checking-assumptions-lmer-lme-mixed-models-in-r
 
 ```{r}
 MIdata[[1]]$Model.F.Res<- residuals(D1) #extracts the residuals and places them in a new column in our original data table
 MIdata[[1]]$Abs.Model.F.Res <-abs(MIdata[[1]]$Model.F.Res) #creates a new column with the absolute value of the residuals
 MIdata[[1]]$Model.F.Res2 <- MIdata[[1]]$Abs.Model.F.Res^2 #squares the absolute values of the residuals to provide the more robust estimate
-Levene.Model.F <- lm(Model.F.Res2 ~ crse_id, data=MIdata[[1]]) #ANOVA of the squared residuals
+
+Levene.Model.F <- lm(Model.F.Res ~ crse_id, data=MIdata[[1]]) #ANOVA of the residuals
 anova(Levene.Model.F) #displays the results
 
+Levene.Model.F2 <- lm(Model.F.Res2 ~ crse_id, data=MIdata[[1]]) #ANOVA of the squared residuals
+anova(Levene.Model.F2) #displays the results
 
-plot(D1, resid(., scaled=TRUE) ~ fitted(.) | crse_id, abline = 0)
-plot(fm1, distance ~ fitted(.) | Subject, abline = c(0,1))
-plot(D1, Subject ~ resid(., scaled=TRUE))
-plot(D1, main = "Standardized Residuals Plot", xlab = "Standardized Predicted Values", ylab = "Standardized Residuals")
-plot.merMod(D1)
+boxplot(MIdata[[1]]$Model.F.Res ~ MIdata[[1]]$crse_id)
+boxplot(MIdata[[1]]$Model.F.Res2 ~ MIdata[[1]]$crse_id)
 ```
 
 Assumption of Normality or residuals (we pass)
