@@ -109,14 +109,7 @@ testEstimates(HLM5, var.comp=TRUE)
 testEstimates(HLM6, var.comp=TRUE)
 ```
 
-```{r}
-testEstimates(HLM1, var.comp=TRUE)
-testEstimates(HLM2, var.comp=TRUE)
-testEstimates(HLM3.1, var.comp=TRUE)
-testEstimates(HLM4.1, var.comp=TRUE)
-testEstimates(HLM5.1, var.comp=TRUE)
-testEstimates(HLM6.1, var.comp=TRUE)
-```
+
 
 MLR Model outputs
 ```{r}
