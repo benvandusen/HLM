@@ -23,6 +23,7 @@ Load stuff (There are some packages that we don't need here, but I didn't clean 
 ```{r message=FALSE, warning=FALSE}
 load("~/Box Sync/work/Research/R stuff/hmiout40") #Ben's computer
 library("ggplot2")
+library(gvlma)
 library("HLMdiag")
 library("DHARMa")
 library("car") #for the Levene test which we will not discuss here
@@ -125,23 +126,42 @@ https://lib.dr.iastate.edu/cgi/viewcontent.cgi?article=4284&context=etd
 https://stackoverflow.com/questions/33859440/residual-plots-for-multiple-imputation-using-mice-package-in-r
 https://biologyforfun.wordpress.com/2014/04/16/checking-glm-model-assumptions-in-r/
 
-Linearity (we fail?)
+Linearity (we pass)
 ```{r}
-Plot.Model.F.Linearity<-plot(resid(D1),MIdata[[1]]$gain) #resid() calls for the residuals of the model, Cigarettes was our initial outcome variables - we're plotting the residuals vs observered
-
-plot.gain.pre<- plot(MIdata[[1]]$gain,MIdata[[1]]$pre)
-
+plot(D1)
 ```
 
-homogenety of variance (we pass)
+X variables are not correlated to the residuals (we pass)
 ```{r}
+cor.test(resid(D1), MIdata[[1]]$pre_scor) 
+cor.test(resid(D1), MIdata[[1]]$used_las) 
+cor.test(resid(D1), MIdata[[1]]$collabnla) 
+```
+
+https://ademos.people.uic.edu/Chapter18.html
+homogenety of variance (don't pass?) 
+Maybe not required for HLM: https://stats.stackexchange.com/questions/77891/checking-assumptions-lmer-lme-mixed-models-in-r
+
+```{r}
+MIdata[[1]]$Model.F.Res<- residuals(D1) #extracts the residuals and places them in a new column in our original data table
+MIdata[[1]]$Abs.Model.F.Res <-abs(MIdata[[1]]$Model.F.Res) #creates a new column with the absolute value of the residuals
+MIdata[[1]]$Model.F.Res2 <- MIdata[[1]]$Abs.Model.F.Res^2 #squares the absolute values of the residuals to provide the more robust estimate
+Levene.Model.F <- lm(Model.F.Res2 ~ crse_id, data=MIdata[[1]]) #ANOVA of the squared residuals
+anova(Levene.Model.F) #displays the results
+
+
+plot(D1, resid(., scaled=TRUE) ~ fitted(.) | crse_id, abline = 0)
+plot(fm1, distance ~ fitted(.) | Subject, abline = c(0,1))
+plot(D1, Subject ~ resid(., scaled=TRUE))
 plot(D1, main = "Standardized Residuals Plot", xlab = "Standardized Predicted Values", ylab = "Standardized Residuals")
+plot.merMod(D1)
 ```
 
 Assumption of Normality or residuals (we pass)
 ```{r}
 qqmath(D1) #id: identifies values that may be exerting undue influence on the model (i.e. outliers) 
 ```
+
 
 
 
