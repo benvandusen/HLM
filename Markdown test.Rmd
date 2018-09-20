@@ -76,6 +76,8 @@ mod6 <- (gain~1 + stud_pre_cent+  used_las + collabnla + class_pre_cent + (1+ st
 Run HLM models
 ```{r message=FALSE, warning=FALSE}
 HLM1<-with(MIdata,{lmer(gain~1 + (1|crse_id))})
+HLM1.1<-with(MIdata,{lmer(gain~1 +  stud_pre_cent + (1|crse_id))})
+HLM1.2<-with(MIdata,{lmer(gain~1 +  stud_pre_cent + class_pre_cent + (1|crse_id))})
 HLM2<-with(MIdata,{lmer(gain~1 + used_las + collabnla + (1|crse_id))})
 HLM3<-with(MIdata,{lmer(gain~1 + stud_pre_cent+  used_las + collabnla + (1|crse_id))})
 HLM4<-with(MIdata,{lmer(gain~1 + stud_pre_cent+  used_las + collabnla + (1+ stud_pre_cent|crse_id))})
@@ -83,12 +85,9 @@ HLM5<-with(MIdata,{lmer(gain~1 + stud_pre_cent+  used_las + collabnla + class_pr
 HLM6<-with(MIdata,{lmer(gain~1 + stud_pre_cent+  used_las + collabnla + class_pre_cent + (1+ stud_pre_cent|crse_id))})
 ```
 
-```{r message=FALSE, warning=FALSE}
-HLM3.1<-with(MIdata,{lmer(gain~1 + stud_pre_grand+  used_las + collabnla + (1|crse_id))})
-HLM4.1<-with(MIdata,{lmer(gain~1 + stud_pre_grand+  used_las + collabnla + (1+ stud_pre_grand|crse_id))})
-HLM5.1<-with(MIdata,{lmer(gain~1 + stud_pre_grand+  used_las + collabnla + class_pre_cent + (1|crse_id))})
-HLM6.1<-with(MIdata,{lmer(gain~1 + stud_pre_grand+  used_las + collabnla + class_pre_cent + (1+ stud_pre_cent|crse_id))})
-```
+
+
+
 
 Run MLR models
 ```{r}
@@ -213,5 +212,55 @@ contrast.formulas <-rbind('White Male'=WM, 'White Male Collab'=WMC, 'White Male 
                           'Black Male'=BM, 'Black Male Collab'=BMC, 'Black Male LA'=BMLA,
                           'White Female'=WF,'White Female Collab'=WFC, 'White Female LA'=WFLA,
                           'Black Female'=BF,'Black Female Collab'=BFC, 'Black Female LA'=BFLA)
+```
+
+
+#Centering analysis
+The code below generates models to compare the three different methods for centering the prescores.
+
+
+```{r message=FALSE, warning=FALSE}
+HLM1.1.1<-with(MIdata,{lmer(gain~1 +  stud_pre_grand + (1|crse_id))})
+HLM1.2.1<-with(MIdata,{lmer(gain~1 +  stud_pre_grand + class_pre_cent + (1|crse_id))})
+HLM3.1<-with(MIdata,{lmer(gain~1 + stud_pre_grand+  used_las + collabnla + (1|crse_id))})
+HLM4.1<-with(MIdata,{lmer(gain~1 + stud_pre_grand+  used_las + collabnla + (1+ stud_pre_grand|crse_id))})
+HLM5.1<-with(MIdata,{lmer(gain~1 + stud_pre_grand+  used_las + collabnla + class_pre_cent + (1|crse_id))})
+HLM6.1<-with(MIdata,{lmer(gain~1 + stud_pre_grand+  used_las + collabnla + class_pre_cent + (1+ stud_pre_cent|crse_id))})
+```
+
+```{r message=FALSE, warning=FALSE}
+HLM1.1.2<-with(MIdata,{lmer(gain~1 +  pre_scor + (1|crse_id))})
+HLM1.2.2<-with(MIdata,{lmer(gain~1 +  pre_scor + class_pre_cent + (1|crse_id))})
+HLM3.2<-with(MIdata,{lmer(gain~1 + pre_scor+  used_las + collabnla + (1|crse_id))})
+HLM4.2<-with(MIdata,{lmer(gain~1 + pre_scor+  used_las + collabnla + (1+ stud_pre_grand|crse_id))})
+HLM5.2<-with(MIdata,{lmer(gain~1 + pre_scor+  used_las + collabnla + class_pre_cent + (1|crse_id))})
+HLM6.2<-with(MIdata,{lmer(gain~1 + pre_scor+  used_las + collabnla + class_pre_cent + (1+ stud_pre_cent|crse_id))})
+```
+
+```{r}
+testEstimates(HLM1, var.comp=TRUE)
+testEstimates(HLM1.1, var.comp=TRUE)
+testEstimates(HLM1.2, var.comp=TRUE)
+testEstimates(HLM1.1.1, var.comp=TRUE)
+testEstimates(HLM1.1.2, var.comp=TRUE)
+testEstimates(HLM1.2.1, var.comp=TRUE)
+testEstimates(HLM1.2.2, var.comp=TRUE)
+```
+
+```{r}
+testEstimates(HLM2, var.comp=TRUE)
+testEstimates(HLM3, var.comp=TRUE)
+testEstimates(HLM3.1, var.comp=TRUE)
+testEstimates(HLM3.2, var.comp=TRUE)
+testEstimates(HLM4, var.comp=TRUE)
+testEstimates(HLM4.1, var.comp=TRUE)
+testEstimates(HLM4.2, var.comp=TRUE)
+testEstimates(HLM5, var.comp=TRUE)
+testEstimates(HLM5.1, var.comp=TRUE)
+testEstimates(HLM5.2, var.comp=TRUE)
+testEstimates(HLM6, var.comp=TRUE)
+testEstimates(HLM6.1, var.comp=TRUE)
+testEstimates(HLM6.2, var.comp=TRUE)
+
 ```
 
