@@ -71,7 +71,7 @@ mod3 <- (gain~1 + stud_pre_cent+  used_las + collabnla + (1|crse_id))
 mod4 <- (gain~1 + stud_pre_cent+  used_las + collabnla + (1+ stud_pre_cent|crse_id))
 mod5 <- (gain~1 + stud_pre_cent+  used_las + collabnla + class_pre_cent + (1|crse_id))
 mod6 <- (gain~1 + stud_pre_cent+  used_las + collabnla + class_pre_cent + (1+ stud_pre_cent|crse_id))
-mod7 <- (gain~1 + stud_pre_cent+  used_las + collabnla + FMCE + (1|crse_id)))
+mod7 <- (gain~1 + stud_pre_cent+  used_las + collabnla + FMCE + (1|crse_id))
 ```
 
 Run HLM models
@@ -318,4 +318,13 @@ testEstimates(HLM6.1, var.comp=TRUE)
 testEstimates(HLM6.2, var.comp=TRUE)
 
 ```
+
+
+This gets the citations for the important packages
+```{r}
+citation(package = "hmi")
+citation(package = "mitml")
+citation(package = "lme4")
+```
+
 
