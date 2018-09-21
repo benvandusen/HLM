@@ -316,3 +316,12 @@ testEstimates(HLM6.2, var.comp=TRUE)
 
 ```
 
+
+This gets the citations for the important packages
+```{r}
+citation(package = "hmi")
+citation(package = "mitml")
+citation(package = "lme4")
+```
+
+
