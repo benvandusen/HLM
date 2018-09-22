@@ -72,6 +72,7 @@ mod4 <- (gain~1 + stud_pre_cent+  used_las + collabnla + (1+ stud_pre_cent|crse_
 mod5 <- (gain~1 + stud_pre_cent+  used_las + collabnla + class_pre_cent + (1|crse_id))
 mod6 <- (gain~1 + stud_pre_cent+  used_las + collabnla + class_pre_cent + (1+ stud_pre_cent|crse_id))
 mod7 <- (gain~1 + stud_pre_cent+  used_las + collabnla + FMCE + (1|crse_id)))
+mod8 <- (gain~1 + stud_pre_cent+  used_las + collabnla + fst_time + (1|crse_id))
 ```
 
 Run HLM models
@@ -85,6 +86,7 @@ HLM4<-with(MIdata,{lmer(gain~1 + stud_pre_cent+  used_las + collabnla + (1+ stud
 HLM5<-with(MIdata,{lmer(gain~1 + stud_pre_cent+  used_las + collabnla + class_pre_cent + (1|crse_id))})
 HLM6<-with(MIdata,{lmer(gain~1 + stud_pre_cent+  used_las + collabnla + class_pre_cent + (1+ stud_pre_cent|crse_id))})
 HLM7 <- with(MIdata,{lmer(gain~1 + stud_pre_cent+  used_las + collabnla + FMCE + (1|crse_id))})
+HLM8 <- with(MIdata,{lmer(gain~1 + stud_pre_cent+  used_las + collabnla + fst_time + (1|crse_id))})
 ```
 
 
@@ -110,6 +112,7 @@ testEstimates(HLM4, var.comp=TRUE)
 testEstimates(HLM5, var.comp=TRUE)
 testEstimates(HLM6, var.comp=TRUE)
 testEstimates(HLM7, var.comp=TRUE)
+testEstimates(HLM8, var.comp=TRUE)
 ```
 
 
