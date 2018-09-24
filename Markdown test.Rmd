@@ -137,12 +137,8 @@ mod3 <- (gain~1 + stud_pre_cent+  used_las + collabnla + (1|crse_id))
 mod4 <- (gain~1 + stud_pre_cent+  used_las + collabnla + (1+ stud_pre_cent|crse_id))
 mod5 <- (gain~1 + stud_pre_cent+  used_las + collabnla + class_pre_cent + (1|crse_id))
 mod6 <- (gain~1 + stud_pre_cent+  used_las + collabnla + class_pre_cent + (1+ stud_pre_cent|crse_id))
-<<<<<<< HEAD
 mod7 <- (gain~1 + stud_pre_cent+  used_las + collabnla + FMCE + (1|crse_id))
-=======
-mod7 <- (gain~1 + stud_pre_cent+  used_las + collabnla + FMCE + (1|crse_id)))
 mod8 <- (gain~1 + stud_pre_cent+  used_las + collabnla + fst_time + (1|crse_id))
->>>>>>> 9ca8e400baa327fe717d0a8fc6b01738ffe8d21f
 ```
 
 Run HLM models
