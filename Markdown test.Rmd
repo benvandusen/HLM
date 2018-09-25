@@ -196,22 +196,74 @@ testEstimates(MLR6, var.comp=TRUE)
 Assumption checking as recommended here: https://ademos.people.uic.edu/Chapter18.html
 Note: I think we may just need to do this for each of the 10 datasets independently.
 
-Run 10 HLM 3 models
 ```{r}
-D1 <- lmer(mod3,data=MIdata[[1]])
+for (i in 1:10) {
+  D1 <- lmer(mod3,data=MIdata[[i]])
+  print(plot(D1, xlab="Fitted Value", ylab="Residual Variance"))
+}
+
+
+for (i in 1:10) {
+  D1 <- lmer(mod3,data=MIdata[[i]])
+#visual homogeneity of variance
+MIdata[[i]]$Model.F.Res <- residuals(D1) #extracts the residuals and places them in a new column in our original data table
+MIdata[[i]]$Abs.Model.F.Res <-abs(MIdata[[1]]$Model.F.Res) #creates a new column with the absolute value of the residuals
+print(boxplot(MIdata[[i]]$Model.F.Res ~ MIdata[[i]]$crse_id), xlab = "Course", ylab = "Residuals" )
+}
+
+
+for (i in 1:10) {
+  D1 <- lmer(mod3,data=MIdata[[i]])
+#Assumption of Normality or residuals: want points to be near the line
+print(qqmath(D1))
+}
 ```
 
-Assumption checking code to be done for all 10 datasets
+# This produces a table of the pvalues for the correlations between the student level variables for pretest and the residuals.
 ```{r}
+res_corr <- data_frame(it =NA,
+                       with_pre_score = NA,
+                       with_cent_pre = NA)
+
+for (i in 1:10) {
+res_corr[i,1] <- i
+D1 <- lmer(mod3,data=MIdata[[i]])
+temp <- cor.test(resid(D1), MIdata[[i]]$pre_scor)
+res_corr[i,2] <-  temp$p.value 
+temp <-  cor.test(resid(D1), MIdata[[i]]$stud_pre_cent)
+res_corr[i,3] <- temp$p.value
+}
+```
+
+
+```{r}
+lev_p <- data_frame(it =NA,
+                       p_values = NA)
+
+for (i in 1:10) {
+lev_p[i,1] <-i
+D1 <- lmer(mod3,data=MIdata[[i]])
+MIdata[[i]]$Model.F.Res<- residuals(D1) #extracts the residuals and places them in a new column in our original data table
+MIdata[[i]]$Abs.Model.F.Res <-abs(MIdata[[i]]$Model.F.Res) #creates a new column with the absolute value of the residuals
+Levene.Model.F <- lm(Model.F.Res ~ crse_id, data=MIdata[[i]]) #ANOVA of the residuals
+temp <-anova(Levene.Model.F) #displays the results: want a p>0.05
+lev_p[i,2] <- temp$`Pr(>F)`[[1]]
+}
+```
+
+
+Making the figures
+```{r, fig.height=4, fig.width=4}
 #linearity: Shouldn't see a pattern
-plot(D1)
+D1 <- lmer(mod3,data=MIdata[[1]])
+plot(D1, xlab="Fitted Value", ylab="Residual Variance")
 
 #variables are not correlated to the residuals: want a p-value>0.05
 cor.test(resid(D1), MIdata[[1]]$pre_scor) 
 cor.test(resid(D1), MIdata[[1]]$stud_pre_cent)
 
 #quantitative homogeneity of variance
-MIdata[[1]]$Model.F.Res<- residuals(D1) #extracts the residuals and places them in a new column in our original data table
+MIdata[[1]]$Model.F.Res <- residuals(D1) #extracts the residuals and places them in a new column in our original data table
 MIdata[[1]]$Abs.Model.F.Res <-abs(MIdata[[1]]$Model.F.Res) #creates a new column with the absolute value of the residuals
 #MIdata[[1]]$Model.F.Res2 <- MIdata[[1]]$Abs.Model.F.Res^2 #squares the absolute values of the residuals to provide the more robust estimate
 
@@ -222,12 +274,14 @@ anova(Levene.Model.F) #displays the results: want a p>0.05
 #anova(Levene.Model.F2) #displays the results
 
 #visual homogeneity of variance
-boxplot(MIdata[[1]]$Model.F.Res ~ MIdata[[1]]$crse_id)
+boxplot(MIdata[[1]]$Model.F.Res ~ MIdata[[1]]$crse_id, xlab = "Course", ylab = "Residuals" )
 #boxplot(MIdata[[1]]$Model.F.Res2 ~ MIdata[[1]]$crse_id)
 
 #Assumption of Normality or residuals: want points to be near the line
 qqmath(D1)
 ```
+
+
 
 
 Linearity... check residuals following this guys solution?
@@ -286,7 +340,7 @@ testUniformity(simulationOutput = simulationOutput)
 
 
 HLMdiag version of diagnostics
-```{r}
+```{r eval=FALSE, include=FALSE}
 library(HLMdiag)
 
 resid1_D1 <- HLMresid(D1, level = 1, type = "LS", standardize = TRUE)
