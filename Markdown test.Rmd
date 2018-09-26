@@ -319,24 +319,76 @@ http://r-statistics.co/Assumptions-of-Linear-Regression.html
 
 Creating groups for final model
 ```{r}
-WM=c(1,0,0,0,0,0,0,0,0,0,0,0,0)
-WMC=c(1,0,1,0,0,0,0,0,0,0,0,0,0)
-WMLA=c(1,0,0,1,0,0,0,0,0,0,0,0,0)
-BM=c(1,0,0,0,0,1,0,0,0,0,0,0,0)
-BMC=c(1,0,1,0,0,1,0,0,0,0,1,0,0)
-BMLA=c(1,0,0,1,0,1,0,0,0,1,0,0,0)
-WF=c(1,0,0,0,0,0,1,0,0,0,0,0,0)
-WFC=c(1,0,1,0,0,0,1,0,0,0,0,0,1)
-WFLA=c(1,0,0,1,0,0,1,0,0,0,0,1,0)
-BF=c(1,0,0,0,0,1,1,0,0,0,0,0,0)
-BFC=c(1,0,1,0,0,1,1,0,0,0,1,0,1)
-BFLA=c(1,0,0,1,0,1,1,0,0,1,0,1,0)
+testEstimates(HLM4, var.comp=TRUE)
+testEstimates(MLR3, var.comp=TRUE)
 
-contrast.formulas <-rbind('White Male'=WM, 'White Male Collab'=WMC, 'White Male LA'=WMLA,
-                          'Black Male'=BM, 'Black Male Collab'=BMC, 'Black Male LA'=BMLA,
-                          'White Female'=WF,'White Female Collab'=WFC, 'White Female LA'=WFLA,
-                          'Black Female'=BF,'Black Female Collab'=BFC, 'Black Female LA'=BFLA)
+Trad = c(1,0,0,0)
+Collab = c(1,0,0,1)
+LA = c(1,0,1,0)
+
+
+HLM_preds <- rbind( 'Lecture'=Trad, 'Collaborative'=Collab, 
+                          'LAs'=LA)
+
+Trad = c(1,0,0,0)
+Collab = c(1,0,0,1)
+LA = c(1,0,1,0)
+
+
+HLM_preds <- rbind( 'Lecture'=Trad, 'Collaborative'=Collab, 
+                          'LAs'=LA)
 ```
+
+```{r}
+pool_and_cov_diffwm <- function(x,y){
+  get.est <- foreach(i=1:10, .combine=rbind) %do% {
+  sxp3 <- summary(glht(x[[i]], linfct=y)) #specifically for post3
+  covp3 <- vcov(glht(x[[i]], linfct=y))
+  data.frame(imp=i, 
+             group=rownames(sxp3$linfct),
+             d = sxp3$test$coefficients, 
+             var.d = (sxp3$test$sigma)^2,
+             cov = covp3)
+}
+
+
+p3est <- get.est %>% group_by(group) %>% 
+                  summarise(Q = mean(d), 
+                            U = mean(var.d), 
+                            B = var(d), 
+                            T = U + ((1+1/max(imp))*B), 
+                            LCL = Q - 1.96*sqrt(T), 
+                            UCL = Q + 1.96*sqrt(T),
+                            SE = sqrt(T)) 
+p3est$race <- word(p3est$group, 1)
+p3est$gender <- word(p3est$group, 2)
+p3est$instruction <- word(p3est$group, 3)
+p3est$race_gender <- paste(p3est$race,p3est$gender, sep= " ")
+
+return <- p3est}
+```
+
+```{r}
+HLM_models <- pool_and_cov_diffwm(HLM3,HLM_preds)
+MLR_models <- pool_and_cov_diffwm(MLR3,HLM_preds)
+HLM_models$test <- "HLM  "
+MLR_models$test <- "MLR  "
+HLM_MLR_est <- bind_rows(HLM_models,MLR_models)
+HLM_MLR_est <- HLM_MLR_est[c(13,1,2,6,7)]
+HLM_MLR_est$group <- factor(HLM_MLR_est$group, levels = c("Lecture","LAs","Collaborative"))
+
+ggplot(HLM_MLR_est, aes(y=Q, x=group, fill=test )) +geom_bar(stat="identity", position = position_dodge(width=0.9)) + geom_errorbar(aes(ymax=UCL, ymin=LCL), position=position_dodge(0.9), width=0.5) + scale_fill_brewer(palette="Paired") +
+ylab("Gain (% points)") + xlab("") +
+  theme(legend.position = c(0.36,-0.15), legend.direction = "horizontal", legend.title = element_blank()) 
+```
+
+
+
+
+
+
+
+
 
 
 #Centering analysis
