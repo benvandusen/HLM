@@ -83,11 +83,11 @@ mean(student_means$mean_gain[student_means$instruction=="Lecture"])
 mean(student_means$mean_gain)
 
 class_means <- foreach(i=1:10, .combine=rbind) %do% {
-  temp <- MIdata[[i]]
+  temp <- MIdata[[1]]
   temp$instruction <- ifelse(temp$used_las==1,"Used_LAs",ifelse(temp$collabnla==1,"Collab_No_LA","Lecture"))
 
   class_means <- temp %>% group_by(crse_id) %>% summarise(gain = mean(gain))
-  class_means <- left_join(class_means,unique(temp[c(13,50)]), by = "crse_id")
+  class_means <- left_join(class_means,unique(temp[c(13,53)]), by = "crse_id")
   class_means <- class_means %>% group_by(instruction) %>% summarise(gain = mean(gain))
   return <- class_means
 }
@@ -125,6 +125,26 @@ mean(inst_means_stu$gain[inst_means_stu$FMCE==0])
 "FMCE"
 mean(inst_means_stu$gain[inst_means_stu$FMCE==1])
 
+```
+
+Summaries for courses
+```{r}
+class_means <- foreach(i=1:10, .combine=cbind) %do% {
+  temp <- MIdata[[1]]
+  temp$instruction <- ifelse(temp$used_las==1,"Used_LAs",ifelse(temp$collabnla==1,"Collab_No_LA","Lecture"))
+
+  class_means <- temp %>% group_by(crse_id) %>% summarise(gain = mean(gain))
+  class_means <- left_join(class_means,unique(temp[c(13,53)]), by = "crse_id")
+  return <- class_means
+}
+
+class_means <- class_means[c(1:3,5,8,11,14,17,20,23,26,29)]
+class_means$gain_star <- rowMeans(class_means[c(2,4:12)])
+class_N <- MIdata[[1]] %>% group_by(crse_id)%>% summarise(N= length(pre_scor))
+class <- left_join(class_means[c(1,3,13)],class_N, by="crse_id")
+collab_low <- class[class$instruction=="Collab_No_LA" & class$crse_id!="133" &class$crse_id!="135",]
+sum(collab_low$N)
+mean(collab_low$gain_star)
 ```
 
 
