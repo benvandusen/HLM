@@ -1,0 +1,203 @@
+---
+title: "Supplemental Materia"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Load data
+```{r message=FALSE, warning=FALSE}
+load("~/Sample_data.Rda") #note, you will need to insert the path to the data file here
+```
+
+
+Load packages
+```{r message=FALSE, warning=FALSE}
+library(tidyr)
+library("car")
+library("Matrix")
+library(lme4)
+library(multcomp)
+library(ggplot2)
+library(stringr)
+library(dplyr) 
+```
+
+Creating new variables
+```{r}
+  class_means <- SampleData %>% group_by(crse_id) %>% summarise(pre_mean_class = mean(pre_scor))
+  class_means$class_pre_cent <- class_means$pre_mean_class - mean(class_means$pre_mean_class)
+  SampleData <- left_join(SampleData,class_means, by="crse_id")
+  SampleData$stud_pre_cent <- SampleData$pre_scor - SampleData$pre_mean_class
+  SampleData$stud_pre_grand <- SampleData$pre_scor-mean(SampleData$pre_scor)
+  SampleData$gain <- SampleData$pst_scor - SampleData$pre_scor
+  SampleData$collabnla <- ifelse(SampleData$colablrn==1,ifelse(SampleData$used_las==0,1,0),0)
+
+```
+
+Calculating the descriptive statistics
+```{r}
+  SampleData$instruction <- ifelse(SampleData$used_las==1,"Used_LAs",ifelse(SampleData$collabnla==1,"Collab_No_LA","Lecture"))
+  student_means <- SampleData %>% group_by(instruction) %>% summarise(mean_gain = mean(gain))
+  return <- student_means
+
+"Used_LAs"
+mean(student_means$mean_gain[student_means$instruction=="Used_LAs"])
+"Collab_No_LA"
+mean(student_means$mean_gain[student_means$instruction=="Collab_No_LA"])
+"Lecture"
+mean(student_means$mean_gain[student_means$instruction=="Lecture"])
+"All"
+mean(student_means$mean_gain)
+
+
+
+  class_means <- SampleData %>% group_by(crse_id) %>% summarise(gain = mean(gain))
+  class_means <- left_join(class_means,unique(SampleData[c(3,13)]), by = "crse_id") #need to replace these column numbers
+  class_means <- class_means %>% group_by(instruction) %>% summarise(gain = mean(gain))
+  return <- class_means
+ 
+"Used_LAs"
+mean(class_means$gain[class_means$instruction=="Used_LAs"])
+"Collab_No_LA"
+mean(class_means$gain[class_means$instruction=="Collab_No_LA"])
+"Lecture"
+mean(class_means$gain[class_means$instruction=="Lecture"])
+ "All"
+ mean(class_means$gain)
+
+```
+
+
+Define models
+```{r}
+#HLM models
+hlm_mod1 <- (gain ~ 1 + (1|crse_id))
+hlm_mod2 <- (gain ~ 1 + used_las + collabnla + (1|crse_id))
+hlm_mod3 <- (gain ~ 1 + stud_pre_cent +  used_las + collabnla + (1|crse_id))
+hlm_mod4 <- (gain ~ 1 + stud_pre_cent +  used_las + collabnla + (1+ stud_pre_cent|crse_id))
+hlm_mod5 <- (gain ~ 1 + stud_pre_cent +  used_las + collabnla + class_pre_cent + (1|crse_id))
+hlm_mod6 <- (gain ~ 1 + stud_pre_cent +  used_las + collabnla + FMCE + (1|crse_id))
+
+#MLR models
+mlr_mod1 <- (gain ~ 1)
+mlr_mod2 <- (gain ~ 1 + used_las + collabnla)
+mlr_mod3 <- (gain ~ 1 + stud_pre_cent +  used_las + collabnla)
+mlr_mod4 <- (gain ~ 1 + stud_pre_cent +  used_las + collabnla)
+mlr_mod5 <- (gain ~ 1 + stud_pre_cent +  used_las + collabnla + class_pre_cent)
+mlr_mod6 <- (gain ~ 1 + stud_pre_cent +  used_las + collabnla + FMCE)
+```
+
+Run models
+```{r message=FALSE, warning=FALSE}
+#HLM models
+HLM1 <- lmer(hlm_mod1, data=SampleData)
+HLM2 <- lmer(hlm_mod2, data=SampleData)
+HLM3 <- lmer(hlm_mod3, data=SampleData)
+HLM4 <- lmer(hlm_mod4, data=SampleData)
+HLM5 <- lmer(hlm_mod5, data=SampleData)
+HLM6 <- lmer(hlm_mod6, data=SampleData)
+
+#MLR models
+MLR1 <- lm(mlr_mod1, data=SampleData)
+MLR2 <- lm(mlr_mod2, data=SampleData)
+MLR3 <- lm(mlr_mod3, data=SampleData)
+MLR4 <- lm(mlr_mod4, data=SampleData)
+MLR5 <- lm(mlr_mod5, data=SampleData)
+MLR6 <- lm(mlr_mod6, data=SampleData)
+```
+
+Model outputs
+```{r}
+#HLM models
+summary(HLM1)
+summary(HLM2)
+summary(HLM3)
+summary(HLM4)
+summary(HLM5)
+summary(HLM6)
+
+#MLR models
+summary(MLR1)
+summary(MLR2)
+summary(MLR3)
+summary(MLR4)
+summary(MLR5)
+summary(MLR6)
+```
+
+Assumption checking
+```{r}
+#linearity: Shouldn't see a pattern
+plot(HLM3)
+
+#quantitative homogeneity of variance
+SampleData$Model.F.Res<- residuals(HLM3) #extracts the residuals and places them in a new column in our original data table
+SampleData$Abs.Model.F.Res <-abs(SampleData$Model.F.Res) #creates a new column with the absolute value of the residuals
+#MIdata[[1]]$Model.F.Res2 <- MIdata[[1]]$Abs.Model.F.Res^2 #squares the absolute values of the residuals to provide the more robust estimate
+
+Levene.Model.F <- lm(Model.F.Res ~ crse_id, data=SampleData) #ANOVA of the residuals
+anova(Levene.Model.F) #displays the results: want a p>0.05
+
+#visual homogeneity of variance
+boxplot(SampleData$Model.F.Res ~ SampleData$crse_id)
+
+#Assumption of Normality or residuals: want points to be near the line
+qqmath(HLM3)
+```
+
+Creating groups for final model
+```{r}
+Trad = c(1,0,0,0)
+Collab = c(1,0,0,1)
+LA = c(1,0,1,0)
+
+
+HLM_preds <- rbind( 'Lecture'=Trad, 'Collaborative'=Collab, 
+                          'LAs'=LA)
+```
+
+```{r}
+pool_and_cov_diffwm <- function(x,y){
+  get.est <- foreach(i=1:10, .combine=rbind) %do% {
+  sxp3 <- summary(glht(x[[i]], linfct=y)) #specifically for post3
+  covp3 <- vcov(glht(x[[i]], linfct=y))
+  data.frame(imp=i, 
+             group=rownames(sxp3$linfct),
+             d = sxp3$test$coefficients, 
+             var.d = (sxp3$test$sigma)^2,
+             cov = covp3)
+}
+
+
+p3est <- get.est %>% group_by(group) %>% 
+                  summarise(Q = mean(d), 
+                            U = mean(var.d), 
+                            B = var(d), 
+                            T = U + ((1+1/max(imp))*B), 
+                            LCL = Q - 1.96*sqrt(T), 
+                            UCL = Q + 1.96*sqrt(T),
+                            SE = sqrt(T)) 
+p3est$race <- word(p3est$group, 1)
+p3est$gender <- word(p3est$group, 2)
+p3est$instruction <- word(p3est$group, 3)
+p3est$race_gender <- paste(p3est$race,p3est$gender, sep= " ")
+
+return <- p3est}
+```
+
+```{r}
+HLM_models <- pool_and_cov_diffwm(HLM3,HLM_preds)
+MLR_models <- pool_and_cov_diffwm(MLR3,HLM_preds)
+HLM_models$test <- "HLM  "
+MLR_models$test <- "MLR  "
+HLM_MLR_est <- bind_rows(HLM_models,MLR_models)
+HLM_MLR_est <- HLM_MLR_est[c(13,1,2,6,7)]
+HLM_MLR_est$group <- factor(HLM_MLR_est$group, levels = c("Lecture","LAs","Collaborative"))
+
+ggplot(HLM_MLR_est, aes(y=Q, x=group, fill=test )) +geom_bar(stat="identity", position = position_dodge(width=0.9)) + geom_errorbar(aes(ymax=UCL, ymin=LCL), position=position_dodge(0.9), width=0.5) + scale_fill_brewer(palette="Paired") +
+ylab("Gain (% points)") + xlab("") +
+  theme(legend.position = c(0.36,-0.15), legend.direction = "horizontal", legend.title = element_blank()) 
+```
