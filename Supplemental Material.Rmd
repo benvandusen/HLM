@@ -13,7 +13,7 @@ load("~/Sample_data.Rda") #note, you will need to insert the path to the data fi
 ```
 
 
-Load packages
+Load packages (We can probably cut this list)
 ```{r message=FALSE, warning=FALSE}
 library(tidyr)
 library("car")
