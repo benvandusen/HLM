@@ -135,8 +135,7 @@ plot(HLM3)
 
 #quantitative homogeneity of variance
 SampleData$Model.F.Res<- residuals(HLM3) #extracts the residuals and places them in a new column in our original data table
-SampleData$Abs.Model.F.Res <-abs(SampleData$Model.F.Res) #creates a new column with the absolute value of the residuals
-#MIdata[[1]]$Model.F.Res2 <- MIdata[[1]]$Abs.Model.F.Res^2 #squares the absolute values of the residuals to provide the more robust estimate
+SampleData$Abs.Model.F.Res <-abs(SampleData$Model.F.Res) #creates a new column with the absolute value of the
 
 Levene.Model.F <- lm(Model.F.Res ~ crse_id, data=SampleData) #ANOVA of the residuals
 anova(Levene.Model.F) #displays the results: want a p>0.05
