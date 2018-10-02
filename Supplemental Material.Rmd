@@ -16,11 +16,11 @@ load("~/Sample_data.Rda") #note, you will need to insert the path to the data fi
 Load packages (We can probably cut this list)
 ```{r message=FALSE, warning=FALSE}
 library(tidyr)
-library("car")
-library("Matrix")
 library(lme4)
 library(multcomp)
+library("Matrix")
 library(ggplot2)
+library(lattice)
 library(stringr)
 library(dplyr) 
 ```
@@ -158,6 +158,8 @@ HLM_preds <- rbind( 'Lecture'=Trad, 'Collaborative'=Collab,
                           'LAs'=LA)
 ```
 
+
+None of this is needed, I think
 ```{r}
 pool_and_cov_diffwm <- function(x,y){
   get.est <- foreach(i=1:10, .combine=rbind) %do% {
@@ -188,6 +190,13 @@ return <- p3est}
 ```
 
 ```{r}
+ggplot(HLM3, aes(y=Q, fill=test )) +geom_bar(stat="identity", position = position_dodge(width=0.9)) + geom_errorbar(aes(ymax=UCL, ymin=LCL), position=position_dodge(0.9), width=0.5) + scale_fill_brewer(palette="Paired") +
+ylab("Gain (% points)") + xlab("") +
+  theme(legend.position = c(0.36,-0.15), legend.direction = "horizontal", legend.title = element_blank()) 
+```
+
+
+```{r}
 HLM_models <- pool_and_cov_diffwm(HLM3,HLM_preds)
 MLR_models <- pool_and_cov_diffwm(MLR3,HLM_preds)
 HLM_models$test <- "HLM  "
@@ -196,7 +205,7 @@ HLM_MLR_est <- bind_rows(HLM_models,MLR_models)
 HLM_MLR_est <- HLM_MLR_est[c(13,1,2,6,7)]
 HLM_MLR_est$group <- factor(HLM_MLR_est$group, levels = c("Lecture","LAs","Collaborative"))
 
-ggplot(HLM_MLR_est, aes(y=Q, x=group, fill=test )) +geom_bar(stat="identity", position = position_dodge(width=0.9)) + geom_errorbar(aes(ymax=UCL, ymin=LCL), position=position_dodge(0.9), width=0.5) + scale_fill_brewer(palette="Paired") +
+ggplot(HLM3, aes(y=Q, x=group, fill=test )) +geom_bar(stat="identity", position = position_dodge(width=0.9)) + geom_errorbar(aes(ymax=UCL, ymin=LCL), position=position_dodge(0.9), width=0.5) + scale_fill_brewer(palette="Paired") +
 ylab("Gain (% points)") + xlab("") +
   theme(legend.position = c(0.36,-0.15), legend.direction = "horizontal", legend.title = element_blank()) 
 ```
