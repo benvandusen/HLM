@@ -9,7 +9,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 Load data
 ```{r message=FALSE, warning=FALSE}
-load("~/Sample_data.Rda") #note, you will need to insert the path to the data file here
+#load("~/Sample_data.Rda") #note, you will need to insert the path to the data file here
 ```
 
 
@@ -145,52 +145,35 @@ HLM_preds <- rbind( 'Lecture'=Trad, 'Collaborative'=Collab,
 
 None of this is needed, I think
 ```{r}
-pool_and_cov_diffwm <- function(x,y){
-  get.est <- foreach(i=1:10, .combine=rbind) %do% {
-  sxp3 <- summary(glht(x[[i]], linfct=y)) #specifically for post3
-  covp3 <- vcov(glht(x[[i]], linfct=y))
-  data.frame(imp=i, 
-             group=rownames(sxp3$linfct),
-             d = sxp3$test$coefficients, 
-             var.d = (sxp3$test$sigma)^2,
-             cov = covp3)
-}
+# getting summary statistics from HLM model for plot
+  sxp3 <- summary(glht(HLM3, linfct=HLM_preds)) #getting the summary from the HLM models
+  get.est<- data.frame(analysis = c("HLM","HLM","HLM"), #simplifying that summary for the plots
+               group=rownames(sxp3$linfct),
+             coeff = sxp3$test$coefficients, 
+             se = sxp3$test$sigma)
 
+  
+# getting summary statistics from MLR model for plot
+  sxp3 <- summary(glht(MLR3, linfct=HLM_preds)) 
+  temp<- data.frame(analysis = c("MLR","MLR","MLR"),
+                    group=rownames(sxp3$linfct),
+             coeff = sxp3$test$coefficients, 
+             se = sxp3$test$sigma)
 
-p3est <- get.est %>% group_by(group) %>% 
-                  summarise(Q = mean(d), 
-                            U = mean(var.d), 
-                            B = var(d), 
-                            T = U + ((1+1/max(imp))*B), 
-                            LCL = Q - 1.96*sqrt(T), 
-                            UCL = Q + 1.96*sqrt(T),
-                            SE = sqrt(T)) 
-p3est$race <- word(p3est$group, 1)
-p3est$gender <- word(p3est$group, 2)
-p3est$instruction <- word(p3est$group, 3)
-p3est$race_gender <- paste(p3est$race,p3est$gender, sep= " ")
+#combine MLR and HLM summaries for plot
+  get.est <- bind_rows(get.est,temp)
 
-return <- p3est}
 ```
 
-Graph of Model 3 predicted values with 95% confidence intervals
+Graph of Model 3 predicted values with error bars representing 1 standard error
 ```{r}
-ggplot(HLM3, aes(y=Q, fill=test )) +geom_bar(stat="identity", position = position_dodge(width=0.9)) + geom_errorbar(aes(ymax=UCL, ymin=LCL), position=position_dodge(0.9), width=0.5) + scale_fill_brewer(palette="Paired") +
-ylab("Gain (% points)") + xlab("") +
-  theme(legend.position = c(0.36,-0.15), legend.direction = "horizontal", legend.title = element_blank()) 
+ggplot(get.est, aes(y=coeff, fill=analysis, x=group )) +
+  geom_bar(stat="identity", position = position_dodge(width=0.9)) + 
+  geom_errorbar(aes(ymax=coeff+se, ymin=coeff-se), position=position_dodge(0.9), width=0.5)  + 
+  scale_fill_brewer(palette="Paired")+
+  ylab("Gain (% points)") + 
+  xlab("") +
+  theme(legend.position = "bottom", legend.direction = "horizontal", legend.title = element_blank()) 
 ```
 
 
-```{r}
-HLM_models <- pool_and_cov_diffwm(HLM3,HLM_preds)
-MLR_models <- pool_and_cov_diffwm(MLR3,HLM_preds)
-HLM_models$test <- "HLM  "
-MLR_models$test <- "MLR  "
-HLM_MLR_est <- bind_rows(HLM_models,MLR_models)
-HLM_MLR_est <- HLM_MLR_est[c(13,1,2,6,7)]
-HLM_MLR_est$group <- factor(HLM_MLR_est$group, levels = c("Lecture","LAs","Collaborative"))
-
-ggplot(HLM3, aes(y=Q, x=group, fill=test )) +geom_bar(stat="identity", position = position_dodge(width=0.9)) + geom_errorbar(aes(ymax=UCL, ymin=LCL), position=position_dodge(0.9), width=0.5) + scale_fill_brewer(palette="Paired") +
-ylab("Gain (% points)") + xlab("") +
-  theme(legend.position = c(0.36,-0.15), legend.direction = "horizontal", legend.title = element_blank()) 
-```
