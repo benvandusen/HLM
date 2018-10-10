@@ -18,7 +18,7 @@ Load packages (We can probably cut this list)
 library(tidyr)
 library(lme4)
 library(multcomp)
-library("Matrix")
+library(Matrix)
 library(ggplot2)
 library(lattice)
 library(stringr)
@@ -27,46 +27,30 @@ library(dplyr)
 
 Creating new variables
 ```{r}
-  class_means <- SampleData %>% group_by(crse_id) %>% summarise(pre_mean_class = mean(pre_scor))
-  class_means$class_pre_cent <- class_means$pre_mean_class - mean(class_means$pre_mean_class)
-  SampleData <- left_join(SampleData,class_means, by="crse_id")
-  SampleData$stud_pre_cent <- SampleData$pre_scor - SampleData$pre_mean_class
-  SampleData$stud_pre_grand <- SampleData$pre_scor-mean(SampleData$pre_scor)
-  SampleData$gain <- SampleData$pst_scor - SampleData$pre_scor
-  SampleData$collabnla <- ifelse(SampleData$colablrn==1,ifelse(SampleData$used_las==0,1,0),0)
+  class_means <- SampleData %>% group_by(crse_id) %>% summarise(pre_mean_class = mean(pre_scor)) # Creates a new dataframe with course means
+  class_means$class_pre_cent <- class_means$pre_mean_class - mean(class_means$pre_mean_class) # Grand centers the course means
+  SampleData <- left_join(SampleData,class_means, by="crse_id") # adds the course means back into the sample data frame
+  SampleData$stud_pre_cent <- SampleData$pre_scor - SampleData$pre_mean_class # Group centers student prescores about their course means
+  SampleData$stud_pre_grand <- SampleData$pre_scor-mean(SampleData$pre_scor)  # Grand centers student prescores about the grand mean of all student prescores
+  SampleData$gain <- SampleData$pst_scor - SampleData$pre_scor # calculates the gain
+  SampleData$collabnla <- ifelse(SampleData$colablrn==1,ifelse(SampleData$used_las==0,1,0),0) # Creates a dummy variable for whether courses used collaborative learning without LAs
 
 ```
 
 Calculating the descriptive statistics
 ```{r}
+#Make one categorical variable with all three types of instruction
   SampleData$instruction <- ifelse(SampleData$used_las==1,"Used_LAs",ifelse(SampleData$collabnla==1,"Collab_No_LA","Lecture"))
+
+# Make data frame of student means by instruction type (disaggrgation)
   student_means <- SampleData %>% group_by(instruction) %>% summarise(mean_gain = mean(gain))
   return <- student_means
 
-"Used_LAs"
-mean(student_means$mean_gain[student_means$instruction=="Used_LAs"])
-"Collab_No_LA"
-mean(student_means$mean_gain[student_means$instruction=="Collab_No_LA"])
-"Lecture"
-mean(student_means$mean_gain[student_means$instruction=="Lecture"])
-"All"
-mean(student_means$mean_gain)
-
-
-
+#Make a data frame of course means by instruction type (aggregation)
   class_means <- SampleData %>% group_by(crse_id) %>% summarise(gain = mean(gain))
   class_means <- left_join(class_means,unique(SampleData[c(3,13)]), by = "crse_id") #need to replace these column numbers
   class_means <- class_means %>% group_by(instruction) %>% summarise(gain = mean(gain))
   return <- class_means
- 
-"Used_LAs"
-mean(class_means$gain[class_means$instruction=="Used_LAs"])
-"Collab_No_LA"
-mean(class_means$gain[class_means$instruction=="Collab_No_LA"])
-"Lecture"
-mean(class_means$gain[class_means$instruction=="Lecture"])
- "All"
- mean(class_means$gain)
 
 ```
 
