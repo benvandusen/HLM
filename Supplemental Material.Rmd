@@ -143,7 +143,6 @@ HLM_preds <- rbind( 'Lecture'=Trad, 'Collaborative'=Collab,
 ```
 
 
-None of this is needed, I think
 ```{r}
 # getting summary statistics from HLM model for plot
   sxp3 <- summary(glht(HLM3, linfct=HLM_preds)) #getting the summary from the HLM models
