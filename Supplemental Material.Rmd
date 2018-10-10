@@ -71,12 +71,12 @@ mean(class_means$gain[class_means$instruction=="Lecture"])
 ```
 
 
-Define models
+Define models (We ultimately used Model 3 as our simplest model that explained the most variance)
 ```{r}
 #HLM models
 hlm_mod1 <- (gain ~ 1 + (1|crse_id))
 hlm_mod2 <- (gain ~ 1 + used_las + collabnla + (1|crse_id))
-hlm_mod3 <- (gain ~ 1 + stud_pre_cent +  used_las + collabnla + (1|crse_id))
+hlm_mod3 <- (gain ~ 1 + stud_pre_cent +  used_las + collabnla + (1|crse_id)) 
 hlm_mod4 <- (gain ~ 1 + stud_pre_cent +  used_las + collabnla + (1+ stud_pre_cent|crse_id))
 hlm_mod5 <- (gain ~ 1 + stud_pre_cent +  used_las + collabnla + class_pre_cent + (1|crse_id))
 hlm_mod6 <- (gain ~ 1 + stud_pre_cent +  used_las + collabnla + FMCE + (1|crse_id))
@@ -147,7 +147,7 @@ boxplot(SampleData$Model.F.Res ~ SampleData$crse_id)
 qqmath(HLM3)
 ```
 
-Creating groups for final model
+Creating groups for final model 
 ```{r}
 Trad = c(1,0,0,0)
 Collab = c(1,0,0,1)
@@ -189,6 +189,7 @@ p3est$race_gender <- paste(p3est$race,p3est$gender, sep= " ")
 return <- p3est}
 ```
 
+Graph of Model 3 predicted values with 95% confidence intervals
 ```{r}
 ggplot(HLM3, aes(y=Q, fill=test )) +geom_bar(stat="identity", position = position_dodge(width=0.9)) + geom_errorbar(aes(ymax=UCL, ymin=LCL), position=position_dodge(0.9), width=0.5) + scale_fill_brewer(palette="Paired") +
 ylab("Gain (% points)") + xlab("") +
