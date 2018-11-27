@@ -1,6 +1,6 @@
 ---
 title: "Supplemental Materia"
-output: html_document
+output: pdf_document
 ---
 
 ```{r setup, include=FALSE}
@@ -9,11 +9,11 @@ knitr::opts_chunk$set(echo = TRUE)
 
 Load data
 ```{r message=FALSE, warning=FALSE}
-#load("~/Sample_data.Rda") #note, you will need to insert the path to the data file here
+load("~/HLM/Sample_data.Rda") #note, you will need to insert the path to the data file here
 ```
 
 
-Load packages (We can probably cut this list)
+Load packages
 ```{r message=FALSE, warning=FALSE}
 library(tidyr)
 library(lme4)
@@ -143,7 +143,7 @@ HLM_preds <- rbind( 'Lecture'=Trad, 'Collaborative'=Collab,
 ```
 
 
-```{r}
+```{r warning=FALSE}
 # getting summary statistics from HLM model for plot
   sxp3 <- summary(glht(HLM3, linfct=HLM_preds)) #getting the summary from the HLM models
   get.est<- data.frame(analysis = c("HLM","HLM","HLM"), #simplifying that summary for the plots
