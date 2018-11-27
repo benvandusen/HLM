@@ -1,6 +1,6 @@
 ---
-title: "Supplemental Materia"
-output: pdf_document
+title: "Supplemental Material"
+output: html_document
 ---
 
 ```{r setup, include=FALSE}
