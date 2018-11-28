@@ -21,8 +21,8 @@ output: html_document
 
 Load stuff (There are some packages that we don't need here, but I didn't clean them up. Sorry.)
 ```{r message=FALSE, warning=FALSE}
-load("~/Box Sync/work/Research/R stuff/hmiout40") #Ben's computer
-#load("~/Documents/LASSO Data/Old/hmiout40")
+#load("~/Box Sync/work/Research/R stuff/hmiout40") #Ben's computer
+load("~/Documents/LASSO Data/Old/hmiout40")
 library(tidyr)
 library("ggplot2")
 library(gvlma)
@@ -65,7 +65,7 @@ MIdata <- as.mitml.list(thing)
 ```
 
 Calculating the descriptive statistics
-```{r}
+```{r eval=FALSE, include=FALSE}
 student_means <- foreach(i=1:10, .combine=rbind) %do% {
   temp <- MIdata[[i]]
   temp$instruction <- ifelse(temp$used_las==1,"Used_LAs",ifelse(temp$collabnla==1,"Collab_No_LA","Lecture"))
@@ -128,7 +128,7 @@ mean(inst_means_stu$gain[inst_means_stu$FMCE==1])
 ```
 
 Summaries for courses
-```{r}
+```{r eval=FALSE, include=FALSE}
 class_means <- foreach(i=1:10, .combine=cbind) %do% {
   temp <- MIdata[[1]]
   temp$instruction <- ifelse(temp$used_las==1,"Used_LAs",ifelse(temp$collabnla==1,"Collab_No_LA","Lecture"))
@@ -306,7 +306,7 @@ testUniformity(simulationOutput = simulationOutput)
 
 
 HLMdiag version of diagnostics
-```{r}
+```{r eval=FALSE, include=FALSE}
 library(HLMdiag)
 
 resid1_D1 <- HLMresid(D1, level = 1, type = "LS", standardize = TRUE)
@@ -398,8 +398,9 @@ HLM_MLR_est <- HLM_MLR_est[c(13,1,2,6,7)]
 HLM_MLR_est$group <- factor(HLM_MLR_est$group, levels = c("Lecture","LAs","Collaborative w/o LAs"))
 
 ggplot(HLM_MLR_est, aes(y=Q, x=group, fill=test )) +geom_bar(stat="identity", position = position_dodge(width=0.9)) + geom_errorbar(aes(ymax=UCL, ymin=LCL), position=position_dodge(0.9), width=0.5) + scale_fill_brewer(palette="Paired") +
-ylab("Gain (% points)") + xlab("") +
-  theme(legend.position = c(0.36,-0.15), legend.direction = "horizontal", legend.title = element_blank()) 
+  ylab("Gain (% points)") + xlab("") +
+  theme(legend.position = c(0.36,-0.15), legend.direction = "horizontal", legend.title = element_blank(),panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+panel.background = element_blank(), axis.line = element_line(colour = "black")) 
 ```
 
 
