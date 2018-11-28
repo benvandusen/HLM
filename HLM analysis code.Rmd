@@ -397,10 +397,12 @@ HLM_MLR_est <- bind_rows(HLM_models,MLR_models)
 HLM_MLR_est <- HLM_MLR_est[c(13,1,2,6,7)]
 HLM_MLR_est$group <- factor(HLM_MLR_est$group, levels = c("Lecture","LAs","Collaborative w/o LAs"))
 
+png("Plot3.png", width = 4, height = 3, units = 'in', res = 600)
 ggplot(HLM_MLR_est, aes(y=Q, x=group, fill=test )) +geom_bar(stat="identity", position = position_dodge(width=0.9)) + geom_errorbar(aes(ymax=UCL, ymin=LCL), position=position_dodge(0.9), width=0.5) + scale_fill_brewer(palette="Paired") +
   ylab("Gain (% points)") + xlab("") +
-  theme(legend.position = c(0.36,-0.15), legend.direction = "horizontal", legend.title = element_blank(),panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+  theme(legend.position = c(0.2,0.9), legend.direction = "horizontal", legend.title = element_blank(),panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
 panel.background = element_blank(), axis.line = element_line(colour = "black")) 
+dev.off()
 ```
 
 
