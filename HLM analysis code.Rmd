@@ -65,7 +65,7 @@ MIdata <- as.mitml.list(thing)
 ```
 
 Calculating the descriptive statistics
-```{r eval=FALSE, include=FALSE}
+```{r}
 student_means <- foreach(i=1:10, .combine=rbind) %do% {
   temp <- MIdata[[i]]
   temp$instruction <- ifelse(temp$used_las==1,"Used_LAs",ifelse(temp$collabnla==1,"Collab_No_LA","Lecture"))
@@ -147,6 +147,57 @@ sum(collab_low$N)
 mean(collab_low$gain_star)
 ```
 
+Calculates the standard deviations
+```{r}
+sd(class_means$gain)
+sd_inst_type <- class_means %>% group_by(instruction) %>% summarise(standdev <- sd(gain))
+
+inst_means <- foreach(i=1:10, .combine=cbind) %do% {
+  temp <- MIdata[[i]]
+  temp$instruction <- ifelse(temp$used_las==1,"Used_LAs",ifelse(temp$collabnla==1,"Collab_No_LA","Lecture"))
+  temp$inst <- ifelse(temp$FMCE==1,"FMCE","FCI")
+  class_means <- temp %>% group_by(crse_id) %>% summarise(gain = mean(gain))
+  return <- class_means
+}
+inst_means <- inst_means[c(1,2,4,6,8,10,12,14,16,18,20)]
+inst_means$gain_star <- rowMeans(inst_means[c(2:11)])
+inst_means <- left_join(inst_means,unique(temp[c(13,51)]), by = "crse_id")
+
+sd_inst_type <- inst_means %>% group_by(inst) %>% summarise(standdev <- sd(gain))
+
+
+# calculating by student level
+#instruments
+inst_sd <- foreach(i=1:10, .combine=cbind) %do% {
+  temp <- MIdata[[i]]
+  temp$instruction <- ifelse(temp$used_las==1,"Used_LAs",ifelse(temp$collabnla==1,"Collab_No_LA","Lecture"))
+  temp$inst <- ifelse(temp$FMCE==1,"FMCE","FCI")
+  class_means <- temp %>% group_by(inst) %>% summarise(stdev = sd(gain))
+  return <- class_means
+}
+inst_sd <- inst_sd[c(1,2,4,6,8,10,12,14,16,18,20)]
+inst_sd$sd_star <- rowMeans(inst_sd[c(2:11)])
+
+#instruction type
+inst_sd <- foreach(i=1:10, .combine=cbind) %do% {
+  temp <- MIdata[[i]]
+  temp$instruction <- ifelse(temp$used_las==1,"Used_LAs",ifelse(temp$collabnla==1,"Collab_No_LA","Lecture"))
+  temp$inst <- ifelse(temp$FMCE==1,"FMCE","FCI")
+  class_means <- temp %>% group_by(instruction) %>% summarise(stdev = sd(gain))
+  return <- class_means
+}
+inst_sd <- inst_sd[c(1,2,4,6,8,10,12,14,16,18,20)]
+inst_sd$sd_star <- rowMeans(inst_sd[c(2:11)])
+ 
+#all students
+inst_sd <- foreach(i=1:10, .combine=cbind) %do% {
+  temp <- MIdata[[i]]
+  stdev <- sd(temp$gain)
+  return <- stdev
+}
+mean(inst_sd)
+
+```
 
 
 Models (Note, we can't actually use these since they don't work with the with function)
