@@ -4,7 +4,7 @@ output: html_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE, tidy.opts=list(width=100),tidy=TRUE)
 ```
 
 Load data
@@ -138,7 +138,7 @@ Collab = c(1,0,0,1)
 LA = c(1,0,1,0)
 
 
-HLM_preds <- rbind( 'Lecture'=Trad, 'Collaborative'=Collab, 
+HLM_preds <- rbind( 'Lecture'=Trad, 'Collaborative w/o LAs'=Collab, 
                           'LAs'=LA)
 ```
 
@@ -166,13 +166,15 @@ HLM_preds <- rbind( 'Lecture'=Trad, 'Collaborative'=Collab,
 
 Graph of Model 3 predicted values with error bars representing 1 standard error
 ```{r}
+get.est$group <- factor(get.est$group, levels = c("Lecture","LAs","Collaborative w/o LAs"))
 ggplot(get.est, aes(y=coeff, fill=analysis, x=group )) +
   geom_bar(stat="identity", position = position_dodge(width=0.9)) + 
   geom_errorbar(aes(ymax=coeff+se, ymin=coeff-se), position=position_dodge(0.9), width=0.5)  + 
   scale_fill_brewer(palette="Paired")+
   ylab("Gain (% points)") + 
   xlab("") +
-  theme(legend.position = "bottom", legend.direction = "horizontal", legend.title = element_blank()) 
+  theme(legend.position = "bottom", legend.direction = "horizontal", legend.title = element_blank(), panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+panel.background = element_blank(), axis.line = element_line(colour = "black")) 
 ```
 
 
